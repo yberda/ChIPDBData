@@ -5,8 +5,9 @@
 #' include ENCODE, CREDB, and GeneHancer-derived collections.
 #'
 #' @param name A character string naming the dataset to retrieve.
-#'             Options: "ENCODE_rE2G", "ENCODE_rE2G_25", "ENCODE_rE2G_50", "ENCODE_rE2G_75",
-#'             "ENCODE_depth_50", "ENCODE_depth_100", "ENCODE_depth_200", "ENCODE_depth_300",
+#'             Options:   "ENCODE_rE2G", "ENCODE_rE2G_25score", "ENCODE_rE2G_50score",
+#'             "ENCODE_rE2G_75score", "ENCODE_rE2G_50depth", "ENCODE_rE2G_100depth",
+#'             "ENCODE_rE2G_200depth", "ENCODE_rE2G_300depth",
 #'             "CREdb", "GeneHancer".
 #' @importFrom AnnotationHub query
 #' @return A list object of class ChIPDB containing transcription factor–target gene mappings.
