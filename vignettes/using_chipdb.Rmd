@@ -1,0 +1,93 @@
+---
+title: "Using ChIPDBData"
+author: "Yosra Berrouayel"
+date: "`r Sys.Date()`"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Using ChIPDBData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(ChIPDBData)
+```
+
+# Overview
+
+The `ChIPDBData` package provides curated ChIP-seq transcription factor target databases for use with the [`TFEA.ChIP`](https://bioconductor.org/packages/TFEA.ChIP/) package.
+
+Each dataset contains a list of ChIP-seq experiments (e.g., from ENCODE) and their associated gene targets. These are structured as **ChIPDB** list objects and retrieved via the `getChIPDB()` accessor.
+
+# Available Datasets
+
+The following datasets are currently included:
+
+- **ENCODE rE2G complete**
+- ENCODE rE2G subsets filtered by score thresholds (0.25, 0.5, 0.75)
+- ENCODE rE2G subsets filtered by depth thresholds (50, 100, 200, 300)
+- **CREdb**
+- **GeneHancer**
+
+Use `getChIPDB()` to retrieve any of them.
+
+# Example: Load a Dataset
+
+```{r load-chipdb}
+# Load the ENCODE dataset filtered by depth >= 200
+ChIPDB <- getChIPDB("ENCODE_rE2G_300depth")
+```
+
+Each ChIPDB object is a named list with two components:
+
+1. A character vector of Entrez Gene IDs — this is the full list of genes that could be targeted across all experiments.
+
+2. A named list of ChIP-seq experiments, where each element corresponds to a specific experiment (typically a transcription factor in a given context), and contains integer indices pointing to the genes in the first component. These indices define the target genes for each TF ChIP-seq.
+
+```{r explore-db}
+# Inspect the top-level structure
+names(ChIPDB)
+
+# Show the first 5 Entrez IDs (the universe of genes)
+ChIPDB[[1]][1:5]
+
+# List the names of the first few ChIP-seq experiments
+names(ChIPDB[[2]])[1:3]
+
+# Show the gene indices for one experiment
+ChIPDB[[2]][[1]][1:5]
+
+# Retrieve the actual gene IDs for that experiment
+ChIPDB[[1]][ ChIPDB[[2]][[1]][1:5] ]
+```
+
+# Integration with TFEA.ChIP
+
+Once the database is loaded into the R environment as an object named `ChIPDB`, it will be automatically recognized by the TFEA.ChIP package as the active regulatory map. Important: the object must be named `ChIPDB`; otherwise, TFEA.ChIP will not detect it.
+
+```{r eval=FALSE}
+library(TFEA.ChIP)
+
+# Example gene list
+genes_of_interest <- c("TP53", "CDKN1A", "MDM2", "BAX")
+
+# Get Entrez IDs
+genes_of_interest <- GeneID2entrez( gene.IDs = genes_of_interest )
+
+# Run TF enrichment
+CM_list <- contingency_matrix( Genes.Upreg, Genes.Control ) # Generates list of contingency tables, one per dataset
+results <- getCMstats( CM_list ) # Generates list of p-values and OR from association test
+
+# Top hits
+head(results)
+```
+
+# Session Info
+
+```{r session-info}
+sessionInfo()
+```
