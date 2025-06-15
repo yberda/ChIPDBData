@@ -26,9 +26,5 @@ gene associations) for use with the TFEA.ChIP package. Available datasets
 include ENCODE, CREDB, and GeneHancer-derived collections.
 }
 \examples{
-<<<<<<< HEAD
-ChIPDB <- getChIPDB("ENCODE_rE2G")
-=======
 ChIPDB <- getChIPDB("ENCODE_rE2G_300depth")
->>>>>>> master
 }
