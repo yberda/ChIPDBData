@@ -9,6 +9,9 @@ Imports:
     ExperimentHub,
     AnnotationHub,
     TFEA.ChIP
+Suggests: 
+    knitr,
+    rmarkdown
 biocViews: ExperimentData, ExperimentHub, Homo_sapiens_Data, ENCODE, SequencingData
 VignetteEngine: knitr::rmarkdown
 VignetteBuilder: knitr
