@@ -1,6 +1,6 @@
 ---
-title: "Using ChIPDBData with TFEA.ChIP"
-author: "Yosra Berrouayel and Luis del Peso"
+title: "Using ChIPDBData"
+author: "Yosra Berrouayel"
 date: "`r Sys.Date()`"
 output: BiocStyle::html_document
 vignette: >
@@ -14,97 +14,75 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-library(TFEA.ChIP)
+library(ChIPDBData)
 ```
 
 # Overview
 
-The `ChIPDBData` package provides curated ChIP-seq transcription factor target databases designed for use with the [`TFEA.ChIP`](https://bioconductor.org/packages/TFEA.ChIP/) package.
+The `ChIPDBData` package provides curated ChIP-seq transcription factor target databases for use with the [`TFEA.ChIP`](https://bioconductor.org/packages/TFEA.ChIP/) package.
 
-Each dataset contains a collection of ChIP-seq experiments (e.g., from ENCODE) along with their associated gene targets. These datasets are structured as **`ChIPDB` list objects**, and can be accessed either manually or via the `getChIPDB()` function.
-
-**Important:** When loading any dataset, make sure it is assigned to an object named `ChIPDB`. This is crucial, as `TFEA.ChIP` looks for a globally defined object called `ChIPDB` and will **not recognize** it under any other name.
+Each dataset contains a list of ChIP-seq experiments (e.g., from ENCODE) and their associated gene targets. These are structured as **ChIPDB** list objects and retrieved via the `getChIPDB()` accessor.
 
 # Available Datasets
 
-The following datasets are currently available in the `ChIPDBData` package:
+The following datasets are currently included:
 
-- ENCODE rE2G (complete)
-- ENCODE rE2G subsets filtered by:
-    - Score thresholds: 0.25, 0.5, 0.75
-    - Depth thresholds: 50, 100, 200, 300
-- CREdb
-- GeneHancer
+- **ENCODE rE2G complete**
+- ENCODE rE2G subsets filtered by score thresholds (0.25, 0.5, 0.75)
+- ENCODE rE2G subsets filtered by depth thresholds (50, 100, 200, 300)
+- **CREdb**
+- **GeneHancer**
 
-These can be accessed via the **ExperimentHub** interface:
+Use `getChIPDB()` to retrieve any of them.
 
-```{r load-chipdb-eh}
-library(ExperimentHub)
+# Example: Load a Dataset
 
-eh <- ExperimentHub()
-dbs <- query(eh, "ChIPDBData")
-dbs
-
-# Example: Load ENCODE rE2G300d
-ChIPDB <- dbs[["EH9854"]]  # IMPORTANT: Assign to 'ChIPDB'
-```
-
-Alternatively, you can retrieve datasets programmatically using `getChIPDB()` with any of the following identifiers: "ENCODE_rE2G", "ENCODE_rE2G_25score", "ENCODE_rE2G_50score", "ENCODE_rE2G_75score", "ENCODE_rE2G_50depth", "ENCODE_rE2G_100depth", "ENCODE_rE2G_200depth", "ENCODE_rE2G_300depth", "CREdb" or "GeneHancer".
-
-For example:
-
-```{r load-chipdb, eval = FALSE}
-# Load the ENCODE dataset filtered by depth >= 300
+```{r load-chipdb}
+# Load the ENCODE dataset filtered by depth >= 200
 ChIPDB <- getChIPDB("ENCODE_rE2G_300depth")
 ```
 
-A `ChIPDB` object is a named list with two main components:
+Each ChIPDB object is a named list with two components:
 
-1. A **character vector of Entrez Gene IDs**, representing the universe of possible targets.
-2. A **named list of ChIP-seq experiments**, where each element is a vector of integer indices pointing to the genes in component 1. Each entry represents the gene targets of a transcription factor in a specific experiment.
+1. A character vector of Entrez Gene IDs — this is the full list of genes that could be targeted across all experiments.
 
-Exploring the structure:
+2. A named list of ChIP-seq experiments, where each element corresponds to a specific experiment (typically a transcription factor in a given context), and contains integer indices pointing to the genes in the first component. These indices define the target genes for each TF ChIP-seq.
 
 ```{r explore-db}
-# List names of the top-level elements
+# Inspect the top-level structure
 names(ChIPDB)
 
-# Preview the first few Entrez IDs
+# Show the first 5 Entrez IDs (the universe of genes)
 ChIPDB[[1]][1:5]
 
-# View names of ChIP-seq experiments
+# List the names of the first few ChIP-seq experiments
 names(ChIPDB[[2]])[1:3]
 
-# Show gene indices for the first experiment
+# Show the gene indices for one experiment
 ChIPDB[[2]][[1]][1:5]
 
-# Get actual gene IDs from those indices
+# Retrieve the actual gene IDs for that experiment
 ChIPDB[[1]][ ChIPDB[[2]][[1]][1:5] ]
 ```
 
-# Integration with `TFEA.ChIP`
+# Integration with TFEA.ChIP
 
-To perform transcription factor enrichment analysis, start by loading your differential expression data and defining the regulated and control gene sets. Ensure that your ChIP-seq database is loaded and assigned to `ChIPDB`. The `TFEA.ChIP` functions will automatically use this object for analysis.
+Once the database is loaded into the R environment as an object named `ChIPDB`, it will be automatically recognized by the TFEA.ChIP package as the active regulatory map. Important: the object must be named `ChIPDB`; otherwise, TFEA.ChIP will not detect it.
 
-**Important:** Make sure to load `ChIPDB` after running `library(TFEA.CHIP)`. Otherwise, the package's default database (a limited subset from GeneHancer) will overwrite it.
+```{r eval=FALSE}
+library(TFEA.ChIP)
 
-```{r eval=TRUE}
-# Load and preprocess differential expression table
-data('hypoxia_DESeq')
-hypoxia_table <- preprocessInputData(hypoxia_DESeq)
+# Example gene list
+genes_of_interest <- c("TP53", "CDKN1A", "MDM2", "BAX")
 
-# Define gene sets
-Genes.Upreg <- Select_genes(hypoxia_table, min_LFC = 1)
-Genes.Control <- Select_genes(hypoxia_table,
-  min_pval = 0.5, max_pval = 1,
-  min_LFC = -0.25, max_LFC = 0.25
-)
+# Get Entrez IDs
+genes_of_interest <- GeneID2entrez( gene.IDs = genes_of_interest )
 
 # Run TF enrichment
-CM_list <- contingency_matrix(Genes.Upreg, Genes.Control)
-results <- getCMstats(CM_list)
+CM_list <- contingency_matrix( Genes.Upreg, Genes.Control ) # Generates list of contingency tables, one per dataset
+results <- getCMstats( CM_list ) # Generates list of p-values and OR from association test
 
-# Display results
+# Top hits
 head(results)
 ```
 
