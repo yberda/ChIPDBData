@@ -19,11 +19,27 @@ library(TFEA.ChIP)
 
 # Overview
 
-The `ChIPDBData` package provides curated ChIP-seq transcription factor target databases designed for use with the [`TFEA.ChIP`](https://bioconductor.org/packages/TFEA.ChIP/) package.
+The `ChIPDBData` package provides curated ChIP-seq transcription factor target databases designed for use with `r Biocpkg("TFEA.ChIP")`.
 
 Each dataset contains a collection of ChIP-seq experiments (e.g., from ENCODE) along with their associated gene targets. These datasets are structured as **`ChIPDB` list objects**, and can be accessed either manually or via the `getChIPDB()` function.
 
 **Important:** When loading any dataset, make sure it is assigned to an object named `ChIPDB`. This is crucial, as `TFEA.ChIP` looks for a globally defined object called `ChIPDB` and will **not recognize** it under any other name.
+
+# Installation
+
+To install the package, start R and enter:
+
+```{r lib-install, message=FALSE, eval=FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("ChIPDBData")
+```
+
+Once `ChIPDBData` is installed, it can be loaded with the following command:
+
+```{r load-lib, message=FALSE, warning=FALSE, cache=FALSE}
+library(ChIPDBData)
+```
 
 # Available Datasets
 
@@ -53,7 +69,7 @@ Alternatively, you can retrieve datasets programmatically using `getChIPDB()` wi
 
 For example:
 
-```{r load-chipdb, eval = FALSE}
+```{r load-chipdb}
 # Load the ENCODE dataset filtered by depth >= 300
 ChIPDB <- getChIPDB("ENCODE_rE2G_300depth")
 ```
